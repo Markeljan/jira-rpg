@@ -1248,6 +1248,11 @@
   dependencies:
     "@types/history" "^4.7.8"
 
+"@forge/jira-bridge@^0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@forge/jira-bridge/-/jira-bridge-0.11.0.tgz#815e5dbfd47b012dd45db621e98f7c6b432cecf8"
+  integrity sha512-cOoHLpYIiaQVrF7u4f3mV7UVBf6g+AqVouPILowwojwaygrJrXm8rzOjAxu6UdhAJ4v8L+RDirtN8i9k+F4yYA==
+
 "@humanwhocodes/config-array@^0.11.8":
   version "0.11.8"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.8.tgz#03595ac2075a4dc0f191cc2131de14fbd7d410b9"

@@ -1,20 +1,48 @@
 import React, { useEffect, useState, useRef } from "react";
 import { requestJira } from "@forge/bridge";
+import { ViewIssueModal } from "@forge/jira-bridge";
 import kaboom from "kaboom";
 
 function App() {
   const canvasRef = useRef(null);
   const [userIssues, setUserIssues] = useState(null);
+  const [completedIssues, setCompletedIssues] = useState(null);
   const [activeMenu, setActiveMenu] = useState("quests");
-  const [player, setPlayer] = useState({ name: "TesName", level: 0, health: 0, attack: 0 });
+  const [playerInfo, setPlayerInfo] = useState({
+    name: "Player",
+    level: 0,
+    health: 0,
+    attack: 0,
+  });
+
+  const showViewIssueModal = (key) => {
+    const viewIssueModal = new ViewIssueModal({
+      context: {
+        issueKey: key,
+      },
+    });
+    viewIssueModal.open();
+  };
 
   useEffect(() => {
     //get the users data
     async function fetchIssues() {
       const response = await requestJira(`/rest/api/3/search?jql=assignee=currentuser()`);
       const responseJson = await response.json();
-      console.log(responseJson.issues);
-      // rebuild the objexts to only use the data we need
+      console.log("raw issues", responseJson.issues);
+
+      const completedIssues = responseJson.issues.filter((issue) => {
+        return issue.fields.status.name === "Done";
+      });
+
+      setPlayerInfo({
+        name: responseJson.issues[0].fields.assignee.displayName.split(" ")[0],
+        health: responseJson.issues.length * 10,
+        attack: responseJson.issues.length * 2,
+        level: completedIssues.length,
+      });
+
+      // rebuild the objects to only use the data we need
       const issues = responseJson.issues.map((issue) => {
         return {
           key: issue.key,
@@ -24,7 +52,6 @@ function App() {
         };
       });
       setUserIssues(issues);
-      console.log(issues);
     }
     fetchIssues();
 
@@ -376,26 +403,32 @@ function App() {
                   marginBottom: "20px",
                 }}
               >
-                Quests
+                Active Quests
               </h1>
               {userIssues &&
                 userIssues.map((issue) => {
-                  console.log(issue.status);
                   if (issue.status === "In Progress") {
                     return (
-                      <div
+                      <a
                         style={{
-                          backgroundColor: "#fff",
-                          padding: "20px",
-                          borderRadius: "8px",
-                          marginBottom: "20px",
-                          color: "#333",
+                          cursor: "pointer",
                         }}
+                        onClick={() => showViewIssueModal(issue.key)}
                       >
-                        <div> {issue.key}</div>
-                        <div> {issue.summary}</div>
-                        <div> {issue.status.substring(12)}</div>
-                      </div>
+                        <div
+                          style={{
+                            backgroundColor: "#fff",
+                            padding: "20px",
+                            borderRadius: "8px",
+                            marginBottom: "20px",
+                            color: "#333",
+                          }}
+                        >
+                          <div> {issue.key}</div>
+                          <div> {issue.summary}</div>
+                          <div> {issue.status.substring(12)}</div>
+                        </div>
+                      </a>
                     );
                   }
                 })}
@@ -424,10 +457,14 @@ function App() {
                   color: "#333",
                 }}
               >
-                <div>Name: {player.name}</div>
-                <div>Level: {player.level}</div>
-                <div>Health: {player.health}</div>
-                <div>Attack: {player.attack}</div>
+                {playerInfo && (
+                  <>
+                    <div>Name: {playerInfo.name}</div>
+                    <div>Level: {playerInfo.level}</div>
+                    <div>Health: {playerInfo.health}</div>
+                    <div>Attack: {playerInfo.attack}</div>
+                  </>
+                )}
               </div>
             </>
           )}
@@ -449,19 +486,26 @@ function App() {
                 userIssues.map((issue) => {
                   if (issue.status === "Done") {
                     return (
-                      <div
+                      <a
                         style={{
-                          backgroundColor: "#fff",
-                          padding: "20px",
-                          borderRadius: "8px",
-                          marginBottom: "20px",
-                          color: "#333",
+                          cursor: "pointer",
                         }}
+                        onClick={() => showViewIssueModal(issue.key)}
                       >
-                        <div> {issue.key}</div>
-                        <div> {issue.summary}</div>
-                        <div> {issue.status.substring(12)}</div>
-                      </div>
+                        <div
+                          style={{
+                            backgroundColor: "#fff",
+                            padding: "20px",
+                            borderRadius: "8px",
+                            marginBottom: "20px",
+                            color: "#333",
+                          }}
+                        >
+                          <div> {issue.key}</div>
+                          <div> {issue.summary}</div>
+                          <div> {issue.status.substring(12)}</div>
+                        </div>
+                      </a>
                     );
                   }
                 })}

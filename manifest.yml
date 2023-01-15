@@ -19,6 +19,7 @@ modules:
 resources:
   - key: main
     path: static/game/build
+
 app:
   id: ari:cloud:ecosystem::app/2d6e1259-5dc3-474e-bde8-55e4f3adcb0c
 permissions:

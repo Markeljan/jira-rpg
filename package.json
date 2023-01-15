@@ -10,6 +10,7 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "@forge/resolver": "^1.4.8"
+    "@forge/resolver": "^1.4.8",
+    "@forge/ui": "^1.5.0"
   }
 }

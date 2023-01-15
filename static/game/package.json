@@ -6,6 +6,7 @@
   "dependencies": {
     "@atlaskit/css-reset": "^6.0.1",
     "@forge/bridge": "^2.5.0",
+    "@forge/jira-bridge": "^0.11.0",
     "kaboom": "^2000.2.10",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
