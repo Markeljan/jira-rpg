@@ -4,7 +4,7 @@ modules:
       resource: main
       resolver:
         function: resolver
-      title: Hello world
+      title: Jira RPG
   function:
     - key: resolver
       handler: index.handler
@@ -12,4 +12,4 @@ resources:
   - key: main
     path: static/game/build
 app:
-  id: ari:cloud:ecosystem::app/ebe235ea-923e-4ffd-82a3-ec9623ac8075
+  id: ari:cloud:ecosystem::app/2d6e1259-5dc3-474e-bde8-55e4f3adcb0c

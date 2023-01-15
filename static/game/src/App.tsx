@@ -13,29 +13,15 @@ function App() {
 
     kaboom({
       canvas: canvasRef.current,
-      width: 576,
-      height: 576,
+      scale: 4,
+      width: 144,
+      height: 144,
     });
 
-    loadSprite("grass", "./sprites/grass.png");
-    loadSprite("steel", "./sprites/steel.png");
-    loadSprite("door", "./sprites/door.png");
-    loadSprite("key", "./sprites/key.png");
-
-    loadSprite("floor", "./sprites/DawnLike/Objects/Floor.png", {
-      sliceX: 21,
-      sliceY: 39,
-      anims: {
-        ground: {
-          from: 400,
-          to: 404,
-          loop: true,
-          speed: 1,
-        },
-      },
-    });
-
-    loadSprite("player", "./sprites/player.png", {
+    loadSprite("wall", "./sprites/tiles/wall.png");
+    loadSprite("door", "./sprites/tiles/door.png");
+    loadSprite("key", "./sprites/objects/key.png");
+    loadSprite("player", "./sprites/characters/player.png", {
       sliceX: 2,
       sliceY: 1,
       anims: {
@@ -47,7 +33,7 @@ function App() {
         },
       },
     });
-    loadSprite("devil", "./sprites/chars/devil.png", {
+    loadSprite("devil", "./sprites/characters/devil.png", {
       sliceX: 2,
       sliceY: 1,
       anims: {
@@ -59,7 +45,7 @@ function App() {
         },
       },
     });
-    loadSprite("orc", "./sprites/chars/orc.png", {
+    loadSprite("orc", "./sprites/characters/orc.png", {
       sliceX: 2,
       sliceY: 1,
       anims: {
@@ -69,13 +55,23 @@ function App() {
           loop: true,
           speed: 1,
         },
+      },
+    });
+    loadSpriteAtlas("./sprites/atlas/Floor.png", {
+      floor: {
+        x: 272,
+        y: 0,
+        width: 48,
+        height: 48,
+        sliceX: 3,
+        sliceY: 3,
       },
     });
 
     scene("main", (levelIdx) => {
       layers(["bg", "game", "ui"], "game");
 
-      const SPEED = 320;
+      const SPEED = 80;
 
       const characters = {
         a: {
@@ -87,6 +83,26 @@ function App() {
           msg: "Get out!",
         },
       };
+
+      //floor tiles
+      addLevel(
+        [
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+        ],
+        {
+          width: 16,
+          height: 16,
+          " ": () => [sprite("floor", { frame: ~~rand(0, 8) })],
+        }
+      );
 
       const levels = [generateLevel(), generateLevel(), generateLevel(), generateLevel()];
       function generateLevel() {
@@ -188,36 +204,37 @@ function App() {
 
         return level;
       }
-
       addLevel(levels[levelIdx], {
-        width: 64,
-        height: 64,
-
-        "=": () => [sprite("grass"), area(), solid(), "grass"],
-        "-": () => [sprite("steel"), area(), solid()],
-        $: () => [sprite("key"), area(), "key"],
-        "@": () => [sprite("player"), scale(4), area(), solid(), "player"],
-        "|": () => [sprite("door"), area(), solid(), "door"],
-        " ": () => [sprite("floor"), scale(4), layer("bg"), "floor"],
+        width: 16,
+        height: 16,
+        // "=": () => [sprite("wall"), area(), solid(), "wall"],
+        // $: () => [sprite("key"), area(), "key"],
+        "@": () => [sprite("player"), area(), solid(), "player"],
+        // "|": () => [sprite("door"), area(), solid(), "door"],
 
         any(ch) {
           const char = characters[ch];
           if (char) {
-            return [sprite(char.sprite), scale(4), area(), solid(), "character", { msg: char.msg }];
+            return [sprite(char.sprite), area(), solid(), "character", { msg: char.msg }];
           }
         },
       });
 
       const player = get("player")[0];
-
       player.play("idle");
+
       get("character").forEach((c) => c.play("idle"));
-      get("floor").forEach((f) => (f.frame = 400));
 
       function addDialog() {
         const h = 160;
         const pad = 16;
-        const bg = add([pos(0, height() - h), rect(width(), h), color(0, 0, 0), z(100)]);
+        const bg = add([
+          pos(0, height() - h),
+          rect(width(), h),
+          color(0, 0, 0),
+          z(10),
+          opacity(0.5),
+        ]);
         const txt = add([
           text("", {
             width: width(),
@@ -300,13 +317,17 @@ function App() {
     });
 
     scene("win", () => {
-      add([text("You Win!"), pos(width() / 2, height() / 2)]);
+      add([text("You Win!"), pos(width() / 2 - 180, height() / 2 - 40)]);
     });
 
     go("main", 0);
   }, []);
 
-  return <canvas ref={canvasRef}></canvas>;
+  return (
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <canvas ref={canvasRef}></canvas>;
+    </div>
+  );
 }
 
 export default App;
