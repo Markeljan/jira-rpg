@@ -3,13 +3,25 @@ modules:
     - key: game-page
       resource: main
       resolver:
-        function: resolver
+        function: game-page-resolver
       title: Jira RPG
+      icon: https://www.svgrepo.com/show/105525/rpg-game.svg
+  trigger:
+    - key: issue-created-event
+      function: issue-created
+      events:
+        - avi:jira:created:issue
   function:
-    - key: resolver
+    - key: game-page-resolver
       handler: index.handler
+    - key: issue-created
+      handler: index.issueCreatedHandler
 resources:
   - key: main
     path: static/game/build
 app:
   id: ari:cloud:ecosystem::app/2d6e1259-5dc3-474e-bde8-55e4f3adcb0c
+permissions:
+  scopes:
+    - read:jira-work
+    - read:issue-event:jira

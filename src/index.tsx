@@ -1,14 +1,14 @@
 import Resolver from "@forge/resolver";
+
 const resolver = new Resolver();
 
-resolver.define("getText", (req) => {
-  console.log(req);
-
-  return "Hello world!";
+resolver.define("exampleFunctionKey", ({ payload, context }) => {
+  return { example: `Hello, ${payload.name}!` };
 });
 
 export const handler = resolver.getDefinitions();
 
-export const handleIssueCreated = async (event) => {
-  console.log(event.issue.id);
+export const issueCreatedHandler = async (event, context) => {
+  console.log("Issue created");
+  console.log(event);
 };

@@ -1,15 +1,32 @@
 import React, { useEffect, useState, useRef } from "react";
-import { invoke } from "@forge/bridge";
+import { requestJira } from "@forge/bridge";
 import kaboom from "kaboom";
 
 function App() {
-  const [data, setData] = useState(null);
   const canvasRef = useRef(null);
+  const [userIssues, setUserIssues] = useState(null);
+  const [activeMenu, setActiveMenu] = useState("quests");
+  const [player, setPlayer] = useState({ name: "TesName", level: 0, health: 0, attack: 0 });
+
   useEffect(() => {
-    invoke("getText").then((data) => {
-      setData(data);
-    });
-    console.log("data", data);
+    //get the users data
+    async function fetchIssues() {
+      const response = await requestJira(`/rest/api/3/search?jql=assignee=currentuser()`);
+      const responseJson = await response.json();
+      console.log(responseJson.issues);
+      // rebuild the objexts to only use the data we need
+      const issues = responseJson.issues.map((issue) => {
+        return {
+          key: issue.key,
+          summary: issue.fields.summary,
+          description: issue.fields.description,
+          status: issue.fields.status.name,
+        };
+      });
+      setUserIssues(issues);
+      console.log(issues);
+    }
+    fetchIssues();
 
     kaboom({
       canvas: canvasRef.current,
@@ -324,8 +341,134 @@ function App() {
   }, []);
 
   return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
-      <canvas ref={canvasRef}></canvas>;
+    <div
+      style={{
+        backgroundColor: "#333",
+        display: "flex",
+        justifyContent: "space-between",
+        padding: "60px",
+      }}
+    >
+      <canvas ref={canvasRef}></canvas>
+      <div style={{ backgroundColor: "#333", display: "flex", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            padding: "60px",
+            marginBottom: "20px",
+            overflow: "hidden",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <button onClick={() => setActiveMenu("stats")}>Stats</button>
+            <button onClick={() => setActiveMenu("quests")}>Active Quests</button>
+            <button onClick={() => setActiveMenu("completed-quests")}>Completed Quests</button>
+          </div>
+          {activeMenu === "quests" && (
+            <>
+              <h1
+                style={{
+                  fontSize: "32px",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  color: "#fff",
+                  marginBottom: "20px",
+                }}
+              >
+                Quests
+              </h1>
+              {userIssues &&
+                userIssues.map((issue) => {
+                  console.log(issue.status);
+                  if (issue.status === "In Progress") {
+                    return (
+                      <div
+                        style={{
+                          backgroundColor: "#fff",
+                          padding: "20px",
+                          borderRadius: "8px",
+                          marginBottom: "20px",
+                          color: "#333",
+                        }}
+                      >
+                        <div> {issue.key}</div>
+                        <div> {issue.summary}</div>
+                        <div> {issue.status.substring(12)}</div>
+                      </div>
+                    );
+                  }
+                })}
+            </>
+          )}
+
+          {activeMenu === "stats" && (
+            <>
+              <h1
+                style={{
+                  fontSize: "32px",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  color: "#fff",
+                  marginBottom: "20px",
+                }}
+              >
+                Stats
+              </h1>
+              <div
+                style={{
+                  backgroundColor: "#fff",
+                  padding: "20px",
+                  borderRadius: "8px",
+                  marginBottom: "20px",
+                  color: "#333",
+                }}
+              >
+                <div>Name: {player.name}</div>
+                <div>Level: {player.level}</div>
+                <div>Health: {player.health}</div>
+                <div>Attack: {player.attack}</div>
+              </div>
+            </>
+          )}
+
+          {activeMenu === "completed-quests" && (
+            <>
+              <h1
+                style={{
+                  fontSize: "32px",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  color: "#fff",
+                  marginBottom: "20px",
+                }}
+              >
+                Completed Quests
+              </h1>
+              {userIssues &&
+                userIssues.map((issue) => {
+                  if (issue.status === "Done") {
+                    return (
+                      <div
+                        style={{
+                          backgroundColor: "#fff",
+                          padding: "20px",
+                          borderRadius: "8px",
+                          marginBottom: "20px",
+                          color: "#333",
+                        }}
+                      >
+                        <div> {issue.key}</div>
+                        <div> {issue.summary}</div>
+                        <div> {issue.status.substring(12)}</div>
+                      </div>
+                    );
+                  }
+                })}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
