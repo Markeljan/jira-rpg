@@ -7,8 +7,3 @@ resolver.define("exampleFunctionKey", ({ payload, context }) => {
 });
 
 export const handler = resolver.getDefinitions();
-
-export const issueCreatedHandler = async (event, context) => {
-  console.log("Issue created");
-  console.log(event);
-};

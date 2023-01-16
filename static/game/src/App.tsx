@@ -62,9 +62,6 @@ function App() {
       height: 144,
     });
 
-    loadSprite("wall", "./sprites/tiles/wall.png");
-    loadSprite("door", "./sprites/tiles/door.png");
-    loadSprite("key", "./sprites/objects/key.png");
     loadSprite("player", "./sprites/characters/player.png", {
       sliceX: 2,
       sliceY: 1,
@@ -103,12 +100,34 @@ function App() {
     });
     loadSpriteAtlas("./sprites/atlas/Floor.png", {
       floor: {
-        x: 272,
+        x: 0,
+        y: 272,
+        width: 16,
+        height: 16,
+      },
+    });
+    loadSpriteAtlas("./sprites/atlas/Wall.png", {
+      wall: {
+        x: 0,
+        y: 272,
+        width: 16,
+        height: 16,
+      },
+    });
+    loadSpriteAtlas("./sprites/atlas/Door0.png", {
+      door: {
+        x: 0,
         y: 0,
-        width: 48,
-        height: 48,
-        sliceX: 3,
-        sliceY: 3,
+        width: 16,
+        height: 16,
+      },
+    });
+    loadSpriteAtlas("./sprites/atlas/Key.png", {
+      key: {
+        x: 0,
+        y: 0,
+        width: 16,
+        height: 16,
       },
     });
 
@@ -144,7 +163,7 @@ function App() {
         {
           width: 16,
           height: 16,
-          " ": () => [sprite("floor", { frame: ~~rand(0, 8) })],
+          " ": () => [sprite("floor")],
         }
       );
 
@@ -248,13 +267,13 @@ function App() {
 
         return level;
       }
-      addLevel(levels[levelIdx], {
+      const dungeon = addLevel(levels[levelIdx], {
         width: 16,
         height: 16,
-        // "=": () => [sprite("wall"), area(), solid(), "wall"],
-        // $: () => [sprite("key"), area(), "key"],
+        "=": () => [sprite("wall"), area(), solid(), "wall"],
+        $: () => [sprite("key"), area(), "key"],
         "@": () => [sprite("player"), area(), solid(), "player"],
-        // "|": () => [sprite("door"), area(), solid(), "door"],
+        "|": () => [sprite("door"), area(), solid(), "door"],
 
         any(ch) {
           const char = characters[ch];
@@ -270,7 +289,7 @@ function App() {
       get("character").forEach((c) => c.play("idle"));
 
       function addDialog() {
-        const h = 160;
+        const h = 40;
         const pad = 16;
         const bg = add([
           pos(0, height() - h),
@@ -281,6 +300,7 @@ function App() {
         ]);
         const txt = add([
           text("", {
+            size: 16,
             width: width(),
           }),
           pos(0 + pad, height() - h + pad),
@@ -361,7 +381,33 @@ function App() {
     });
 
     scene("win", () => {
-      add([text("You Win!"), pos(width() / 2 - 180, height() / 2 - 40)]);
+      addLevel(
+        [
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+          "         ",
+        ],
+        {
+          width: 16,
+          height: 16,
+          " ": () => [sprite("floor")],
+        }
+      );
+      // Add a background
+      add([rect(width(), height()), color(0, 0, 0), opacity(0.5)]);
+      // Add a text label
+      add([
+        pos(width() / 2 - 36, height() / 2 - 16),
+        text("You won!", {
+          size: 16,
+        }),
+      ]);
     });
 
     go("main", 0);
