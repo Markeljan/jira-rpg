@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { requestJira } from "@forge/bridge";
 import { ViewIssueModal } from "@forge/jira-bridge";
-import kaboom from "kaboom";
+import kaboom, { GameObj } from "kaboom";
 
 function App() {
   const canvasRef = useRef(null);
@@ -30,7 +30,6 @@ function App() {
     async function fetchIssues() {
       const response = await requestJira(`/rest/api/3/search?jql=assignee=currentuser()`);
       const responseJson = await response.json();
-      console.log("raw issues", responseJson.issues);
 
       const completedIssues = responseJson.issues.filter((issue) => {
         return issue.fields.status.name === "Done";
@@ -69,7 +68,7 @@ function App() {
       });
 
       setData("gameHealth", gameHealth);
-      setData("gameScore", "0");
+      setData("gameScore", 0);
 
       loadSprite("player", "./sprites/characters/player.png", {
         sliceX: 2,
@@ -97,6 +96,42 @@ function App() {
         },
       });
       loadSprite("orc", "./sprites/characters/orc.png", {
+        sliceX: 2,
+        sliceY: 1,
+        anims: {
+          idle: {
+            from: 0,
+            to: 1,
+            loop: true,
+            speed: 1,
+          },
+        },
+      });
+      loadSprite("dino", "./sprites/characters/dino.png", {
+        sliceX: 2,
+        sliceY: 1,
+        anims: {
+          idle: {
+            from: 0,
+            to: 1,
+            loop: true,
+            speed: 1,
+          },
+        },
+      });
+      loadSprite("healer", "./sprites/characters/healer.png", {
+        sliceX: 2,
+        sliceY: 1,
+        anims: {
+          idle: {
+            from: 0,
+            to: 1,
+            loop: true,
+            speed: 1,
+          },
+        },
+      });
+      loadSprite("boss", "./sprites/characters/boss.png", {
         sliceX: 2,
         sliceY: 1,
         anims: {
@@ -168,6 +203,20 @@ function App() {
       scene("main", (levelIdx) => {
         layers(["bg", "game", "ui"], "game");
 
+        //draw heart sprites on ui layer
+        const hearts = [];
+        for (let i = 0; i < gameHealth; i++) {
+          hearts.push(add([sprite("heart"), pos(i * 16, 0), z(100), "heart", { idx: i }]));
+          if (getData("gameHealth") <= gameHealth) {
+            if (i >= getData("gameHealth")) {
+              hearts[i].frame = 4;
+            }
+          }
+        }
+
+        //draw the score on the ui layer
+        const score = add([text(getData("gameScore"), { size: 16 }), pos(112, 0), z(100), "score"]);
+
         const SPEED = 80;
 
         const characters = {
@@ -178,6 +227,14 @@ function App() {
           b: {
             sprite: "devil",
             msg: "Get out!",
+          },
+          c: {
+            sprite: "dino",
+            msg: "Roar!",
+          },
+          d: {
+            sprite: "boss",
+            msg: "You will not defeat me!",
           },
         };
 
@@ -281,10 +338,16 @@ function App() {
           availablePositions = availablePositions.filter(
             (p) => !(p[0] === charPos[0] && p[1] === charPos[1])
           );
-
           level[charPos[1]] =
             level[charPos[1]].substring(0, charPos[0]) +
-            (Math.random() < 0.5 ? "a" : "b") +
+            // Randomly select a character out of 4 instead of 2
+            (Math.random() < 0.25
+              ? "a"
+              : Math.random() < 0.5
+              ? "b"
+              : Math.random() < 0.75
+              ? "c"
+              : "+") +
             level[charPos[1]].substring(charPos[0] + 1);
           availablePositions = availablePositions.filter(
             (p) => !(p[0] === charPos[0] && p[1] === charPos[1])
@@ -300,21 +363,67 @@ function App() {
             level[playerPos[1]].substring(0, playerPos[0]) +
             "@" +
             level[playerPos[1]].substring(playerPos[0] + 1);
+          availablePositions = availablePositions.filter(
+            (p) => !(p[0] === playerPos[0] && p[1] === playerPos[1])
+          );
+          // Add additional characters depending on the level
+          for (let i = 0; i < levelIdx; i++) {
+            //random chance to add a character
+            if (Math.random() < 0.5) {
+              continue;
+            }
+            let charPos = availablePositions.splice(
+              Math.floor(Math.random() * availablePositions.length),
+              1
+            )[0];
+            level[charPos[1]] =
+              level[charPos[1]].substring(0, charPos[0]) +
+              (Math.random() < 0.25
+                ? "a"
+                : Math.random() < 0.5
+                ? "b"
+                : Math.random() < 0.75
+                ? "c"
+                : "+") +
+              level[charPos[1]].substring(charPos[0] + 1);
+          }
+          // random chance to add a Boss character 'e'
+          if (Math.random() < 0.1) {
+            let charPos = availablePositions.splice(
+              Math.floor(Math.random() * availablePositions.length),
+              1
+            )[0];
+            level[charPos[1]] =
+              level[charPos[1]].substring(0, charPos[0]) +
+              "d" +
+              level[charPos[1]].substring(charPos[0] + 1);
+          }
 
           return level;
         }
 
-        const dungeon = addLevel(generateLevel(), {
+        const dungeon = addLevel(generateLevel(levelIdx), {
           width: 16,
           height: 16,
           "=": () => [sprite("wall"), area(), solid(), "wall"],
           $: () => [sprite("key"), area(), "key"],
+          "+": () => [sprite("healer"), area(), solid(), "healer", { msg: "Bless you!" }],
           "@": () => [sprite("player"), health(getData("gameHealth")), area(), solid(), "player"],
           "|": () => [sprite("door"), area(), solid(), "door"],
 
           any(ch) {
             const char = characters[ch];
             if (char) {
+              if (char.sprite === "boss") {
+                return [
+                  sprite(char.sprite),
+                  scale(1.5),
+                  area(),
+                  solid(),
+                  "character",
+                  { msg: char.msg },
+                ];
+              }
               return [sprite(char.sprite), area(), solid(), "character", { msg: char.msg }];
             }
           },
@@ -322,14 +431,6 @@ function App() {
 
         const player = get("player")[0];
         player.play("idle");
-
-        //draw heart sprites on ui layer
-        const hearts = [];
-        for (let i = 0; i < getData("gameHealth"); i++) {
-          hearts.push(add([sprite("heart"), pos(0 + i * 16, 0), z(100), "heart", { idx: i }]));
-        }
-        //draw the score on the ui layer
-        const score = add([text(getData("gameScore"), { size: 16 }), pos(0, 112), z(100), "score"]);
 
         get("character").forEach((c) => c.play("idle"));
 
@@ -385,23 +486,35 @@ function App() {
           hasKey = true;
         });
 
+        player.onCollide("healer", (healer) => {
+          if (getData("gameHealth", 1) < gameHealth) {
+            setData("gameHealth", getData("gameHealth", 1) + 1);
+            player.heal(1);
+            //add heart sprite
+            const heart = get("heart").find((h) => h.idx === getData("gameHealth", 1) - 1);
+            heart.play("heal");
+          }
+          dialog.say(healer.msg);
+          destroy(healer);
+        });
+
         player.onCollide("door", () => {
           if (hasKey) {
-            setData("gameScore", Number(getData("gameScore", 0)) + 1);
+            setData("gameScore", Number(getData("gameScore", 0)) + 100);
             go("main", levelIdx + 1);
           } else {
             dialog.say("It's locked!");
           }
         });
 
-        player.onCollide("character", (ch) => {
+        player.onCollide("character", (ch: GameObj<any>) => {
           player.hurt(1);
           //remove heart sprite
           const heart = get("heart").find((h) => h.idx === getData("gameHealth", 1) - 1);
           setData("gameHealth", getData("gameHealth", 1) - 1);
-          console.log(getData("gameHealth", 1));
           heart.play("hurt");
           destroy(ch);
+          setData("gameScore", Number(getData("gameScore", 0)) + 25);
         });
 
         player.on("death", () => {
