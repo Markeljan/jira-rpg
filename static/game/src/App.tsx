@@ -12,7 +12,7 @@ function App() {
     name: "Player",
     level: 0,
     health: 0,
-    attack: 0,
+    skill: 0,
   });
   const [gameHealth, setGameHealth] = useState(1);
 
@@ -38,7 +38,7 @@ function App() {
       setPlayerInfo({
         name: responseJson.issues[0].fields.assignee.displayName.split(" ")[0],
         health: Math.floor((responseJson.issues.length / 3) * 10),
-        attack: responseJson.issues.length * 2,
+        skill: responseJson.issues.length * 2,
         level: completedIssues.length,
       });
 
@@ -508,13 +508,19 @@ function App() {
         });
 
         player.onCollide("character", (ch: GameObj<any>) => {
-          player.hurt(1);
-          //remove heart sprite
-          const heart = get("heart").find((h) => h.idx === getData("gameHealth", 1) - 1);
-          setData("gameHealth", getData("gameHealth", 1) - 1);
-          heart.play("hurt");
+          //random number 1 - 250
+          const randomRoll = Math.floor(Math.random() * 100);
+          if (randomRoll > playerInfo.skill) {
+            player.hurt(1);
+            //remove heart sprite
+            const heart = get("heart").find((h) => h.idx === getData("gameHealth", 1) - 1);
+            setData("gameHealth", getData("gameHealth", 1) - 1);
+            heart.play("hurt");
+          }
           destroy(ch);
           setData("gameScore", Number(getData("gameScore", 0)) + 25);
+          // redraw score
+          score.text = `${getData("gameScore", 0)}`;
         });
 
         player.on("death", () => {
@@ -610,14 +616,27 @@ function App() {
   return (
     <div
       style={{
-        backgroundColor: "#333",
+        backgroundColor: "#8BAC0E99",
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: "space-around",
+        alignItems: "center",
         padding: "60px",
+        border: "solid 1px black",
+        borderRadius: "10px",
+        boxShadow: "2px 2px 10px #00000099",
       }}
     >
       <canvas ref={canvasRef}></canvas>
-      <div style={{ backgroundColor: "#333", display: "flex", justifyContent: "center" }}>
+      <div
+        style={{
+          backgroundColor: "#8BAC0E99",
+          opacity: "0.90",
+          display: "flex",
+          justifyContent: "center",
+          width: "600px",
+          height: "600px",
+        }}
+      >
         <div
           style={{
             display: "flex",
@@ -628,9 +647,57 @@ function App() {
           }}
         >
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <button onClick={() => setActiveMenu("stats")}>Stats</button>
-            <button onClick={() => setActiveMenu("quests")}>Active Quests</button>
-            <button onClick={() => setActiveMenu("completed-quests")}>Completed Quests</button>
+            <button
+              style={{
+                backgroundColor: activeMenu === "stats" ? "#8B4513" : "#8BAC0E",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                padding: "10px 20px",
+                fontSize: "18px",
+                fontWeight: "bold",
+                boxShadow: "2px 2px #555",
+                cursor: "pointer",
+                margin: "0 20px",
+              }}
+              onClick={() => setActiveMenu("stats")}
+            >
+              Game Stats
+            </button>
+            <button
+              style={{
+                backgroundColor: activeMenu === "quests" ? "#8B4513" : "#8BAC0E",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                padding: "10px 20px",
+                fontSize: "18px",
+                fontWeight: "bold",
+                boxShadow: "2px 2px #555",
+                cursor: "pointer",
+                margin: "0 20px",
+              }}
+              onClick={() => setActiveMenu("quests")}
+            >
+              Active Quests
+            </button>
+            <button
+              style={{
+                backgroundColor: activeMenu === "completed-quests" ? "#8B4513" : "#8BAC0E",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                padding: "10px 20px",
+                fontSize: "18px",
+                fontWeight: "bold",
+                boxShadow: "2px 2px #555",
+                cursor: "pointer",
+                margin: "0 20px",
+              }}
+              onClick={() => setActiveMenu("completed-quests")}
+            >
+              Completed Quests
+            </button>
           </div>
           {activeMenu === "quests" && (
             <>
@@ -642,9 +709,7 @@ function App() {
                   color: "#fff",
                   marginBottom: "20px",
                 }}
-              >
-                Active Quests
-              </h1>
+              ></h1>
               {userIssues &&
                 userIssues.map((issue) => {
                   if (issue.status === "In Progress") {
@@ -685,9 +750,7 @@ function App() {
                   color: "#fff",
                   marginBottom: "20px",
                 }}
-              >
-                Stats
-              </h1>
+              ></h1>
               <div
                 style={{
                   backgroundColor: "#fff",
@@ -699,10 +762,47 @@ function App() {
               >
                 {playerInfo && (
                   <>
-                    <div>Name: {playerInfo.name}</div>
-                    <div>Level: {playerInfo.level}</div>
-                    <div>Health: {playerInfo.health}</div>
-                    <div>Attack: {playerInfo.attack}</div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        flexDirection: "column",
+                        alignItems: "center",
+                      }}
+                    >
+                      <p>
+                        <b>{playerInfo.name}</b>
+                      </p>
+                      <p>
+                        <b>📊Level: {playerInfo.level}</b>
+                      </p>
+                      <p>
+                        <b>❤️Health: {playerInfo.health}</b>
+                      </p>
+                      <p>
+                        <b>⚔️Skill: {playerInfo.skill}</b>
+                      </p>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        marginTop: "10px",
+                      }}
+                    >
+                      <p>
+                        Your health and skills increase each time you <b>level</b> up.
+                      </p>
+                      <p>Completing quests (Jira tasks) to level up!</p>
+                      <p>
+                        <b>Health</b> is determined by your total Jira issues.
+                      </p>
+                      <p>
+                        Avoid damage from enemies with <b>Skill</b>. Skill is based on level.
+                      </p>
+                    </div>
                   </>
                 )}
               </div>
@@ -719,9 +819,7 @@ function App() {
                   color: "#fff",
                   marginBottom: "20px",
                 }}
-              >
-                Completed Quests
-              </h1>
+              ></h1>
               {userIssues &&
                 userIssues.map((issue) => {
                   if (issue.status === "Done") {
