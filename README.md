@@ -3,6 +3,9 @@
 Jira RPG is a game app that combines Jira tasks with role-playing gameplay. Players progress through the game by completing tasks assigned to them in Jira. The app seamlessly integrates with Jira, allowing players to manage their real-world tasks in an interactive and engaging way. Perfect for boosting productivity and having fun at the same time.
 
 
+![Screenshot 2023-01-15 at 11 30 28 PM](https://user-images.githubusercontent.com/12901349/212600900-97a9ffff-6c0b-4616-aed7-ae091ae3e79a.png)
+
+
 ## Inspiration
 The inspiration for Jira RPG came from a desire to make work tasks more engaging and interactive. We wanted to create a way for people to not only manage their real-world tasks, but also have fun while doing it.
 
